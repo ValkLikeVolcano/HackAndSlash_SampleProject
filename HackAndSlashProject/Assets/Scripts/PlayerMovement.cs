@@ -7,6 +7,7 @@ public class PlayerMovement : MonoBehaviour
 {
 	private Rigidbody rb;
     public Transform orientation;
+    public Transform cam;
 
     //Rotation and look
     private float xRotation;
@@ -20,6 +21,8 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsGround;
     public float groundOffset = 1f;
     public float groundRadius = 0.2f;
+    public float turnSmoothTime = 0.1f;
+    float turnSmoothVelocity;
 
     public float counterMovement = 0.175f;
     private float threshold = 0.01f;
@@ -59,6 +62,7 @@ public class PlayerMovement : MonoBehaviour
 	{
         Vector2 mag = FindVelRelativeToLook();
         float xMag = mag.x, yMag = mag.y;
+        Vector3 dir = new Vector3(x, 0f, y).normalized;
 
         CounterMovement(x, y, mag);
 
@@ -71,9 +75,17 @@ public class PlayerMovement : MonoBehaviour
         if (y > 0 && yMag > maxSpeed) y = 0;
         if (y < 0 && yMag < -maxSpeed) y = 0;
 
-        rb.AddForce(orientation.transform.forward * y * moveSpeed * Time.deltaTime);
-        rb.AddForce(orientation.transform.right * x * moveSpeed * Time.deltaTime);
+        if(dir.magnitude >= 0.1f)
+		{
+            float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        }
+
+        rb.AddForce(transform.forward * y * moveSpeed * Time.deltaTime);
+        rb.AddForce(transform.right * x * moveSpeed * Time.deltaTime);
     }
+
     public Vector2 FindVelRelativeToLook()
     {
         float lookAngle = orientation.transform.eulerAngles.y;
