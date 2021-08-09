@@ -6,6 +6,7 @@ using System;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
+	PlayerHandler ph;
 	[HideInInspector]
 	public CharacterController controller;
 	public Transform cam;
@@ -28,6 +29,7 @@ public class PlayerMovement : MonoBehaviour
 	public void Start()
 	{
 		controller = GetComponent<CharacterController>();
+		ph = GetComponent<PlayerHandler>();
 		Cursor.lockState = CursorLockMode.Locked;
 		Cursor.visible = true;
 	}
@@ -50,21 +52,30 @@ public class PlayerMovement : MonoBehaviour
 		{
 			float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 			float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-			transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+			if (ph.canTurn)
+			{
+				transform.rotation = Quaternion.Euler(0f, angle, 0f);
+			}	
 
 			moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-			controller.Move(moveDir.normalized * speed * Time.deltaTime);
 
+			if (ph.canMove)
+			{
+				controller.Move(moveDir.normalized * speed * Time.deltaTime);
+			}
 		}
 
-		if (Input.GetButtonDown("Jump") && grounded)
+		if (Input.GetButtonDown("Jump") && grounded && ph.canJump)
 		{
 			velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 		}
 
 		velocity.y += gravity * Time.deltaTime;
 
-		controller.Move(velocity * Time.deltaTime);
+		if (ph.hasGravity)
+		{
+			controller.Move(velocity * Time.deltaTime);
+		}
 	}
-
 }

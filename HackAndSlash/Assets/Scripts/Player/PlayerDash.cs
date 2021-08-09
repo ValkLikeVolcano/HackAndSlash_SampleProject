@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerMovement))]
 public class PlayerDash : MonoBehaviour
 {
+	PlayerHandler ph;
 	PlayerMovement moveScript;
 
 	public float dashSpeed;
@@ -14,11 +15,15 @@ public class PlayerDash : MonoBehaviour
 	private void Start()
 	{
 		moveScript = GetComponent<PlayerMovement>();
+		ph = GetComponent<PlayerHandler>();
 	}
 	private void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.LeftShift) && moveScript.grounded && !isOnCooldown)
+		if (Input.GetKeyDown(KeyCode.LeftShift) && !isOnCooldown && ph.canDash)
 		{
+			ph.canMove = false;
+			ph.hasGravity = false;
+			ph.canJump = false;
 			StartCoroutine(Cooldown());
 			StartCoroutine(Dash());
 		}
@@ -33,6 +38,11 @@ public class PlayerDash : MonoBehaviour
 
 				yield return null;
 			}
+			yield return new WaitUntil(() => Time.time >= startTime + dashTime);
+
+			ph.canMove = true;
+			ph.hasGravity = true;
+			ph.canJump = true;
 		}
 
 		IEnumerator Cooldown()
