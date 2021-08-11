@@ -7,21 +7,22 @@ public class PlayerTargeting : MonoBehaviour
 {
     PlayerHandler ph;
     PlayerMovement moveScript;
-    public Transform selectedTarget;
-    public List<Transform> enemys;
-    [HideInInspector]
     public Collider[] hitColliders;
+    public List<Transform> frontEnemys;
+    public List<Transform> backEnemys;
+    public Transform selectedTarget;
     private Transform myTransform;
 
     public float enemyPinRadius = 5f;
     public float attackCooldown = 1f;
+    public float moveSpeed = 25f;
+    public float rotationSpeed = 30f;
     private float distance;
 
     bool checkDistance;
     bool canLookForEnemy;
     bool isOnCooldown;
-    [HideInInspector]
-    public bool simpleAtk;
+
 
     Transform closest;
 
@@ -53,6 +54,7 @@ public class PlayerTargeting : MonoBehaviour
     public void LookForEnemy()
 	{
         hitColliders = Physics.OverlapSphere(myTransform.position, enemyPinRadius);
+
         if (hitColliders == null)
             return;
 
@@ -60,14 +62,28 @@ public class PlayerTargeting : MonoBehaviour
 		{
             if(hitCollider.tag == "Enemy")
 			{
-                enemys.Add(hitCollider.transform);
+                Vector3 enemyDir = hitCollider.transform.position - transform.position;
+
+                if(Vector3.Angle(enemyDir, transform.forward) < 80f)
+				{
+                    frontEnemys.Add(hitCollider.transform);
+                }
+                else if(Vector3.Angle(enemyDir, transform.forward) > 80f)
+				{
+                    backEnemys.Add(hitCollider.transform);
+				}
 			}
 		}
 
-        if (enemys.Count == 0)
-            return;
+        if (frontEnemys.Count == 0)
+		{
+            if (backEnemys.Count == 0)
+                return;
 
-        closest = enemys.OrderBy(t => (t.position - myTransform.position).sqrMagnitude).First().transform;
+            closest = backEnemys.OrderBy(t => (t.position - myTransform.position).sqrMagnitude).First().transform;
+        }
+        else
+            closest = frontEnemys.OrderBy(t => (t.position - myTransform.position).sqrMagnitude).First().transform;
 
         StartCoroutine(RotateToEnemy(closest));
     }
@@ -93,14 +109,16 @@ public class PlayerTargeting : MonoBehaviour
             yield return null;
 
         checkDistance = true;
-        simpleAtk = true;
 
         while (distance > 2f)
 		{
+            if (distance > enemyPinRadius)
+                yield return null;
+
             Vector3 movDiff = enemy.position - transform.position;
 
-            transform.rotation = Quaternion.Slerp(transform.rotation, _lookRotation, Time.deltaTime * 20f);
-            moveScript.controller.Move(movDiff.normalized * Time.deltaTime * 30);
+            transform.rotation = Quaternion.Slerp(transform.rotation, _lookRotation, Time.deltaTime * rotationSpeed);
+            moveScript.controller.Move(movDiff.normalized * Time.deltaTime * moveSpeed);
 
             yield return null;
         }
@@ -113,7 +131,8 @@ public class PlayerTargeting : MonoBehaviour
 
         closest = null;
         hitColliders = null;
-        enemys.Clear();
+        frontEnemys.Clear();
+        backEnemys.Clear();
         checkDistance = false;
         canLookForEnemy = true;
         ph.canDash = true;

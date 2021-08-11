@@ -10,15 +10,16 @@ public class PlayerMovement : MonoBehaviour
 	[HideInInspector]
 	public CharacterController controller;
 	public Transform cam;
-	public Transform groundCheck;
-	public float groundDistance = 0.4f;
-	public LayerMask groundMask;
 
 	public float speed = 5f;
 	public float jumpHeight = 4f;
 	public float turnSmoothTime = 0.1f;
 	float turnSmoothVelocity;
 	public float gravity = -9.81f;
+	public Transform groundCheck;
+	public float groundDistance = 0.4f;
+	public LayerMask groundMask;
+
 	[HideInInspector]
 	public Vector3 velocity;
 	[HideInInspector]
@@ -38,17 +39,24 @@ public class PlayerMovement : MonoBehaviour
 	{
 		grounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
-		if(grounded && velocity.y < 0)
+		if (grounded)
 		{
-			velocity.y = -2f;
+			controller.stepOffset = 0.4f;
+
+			if (velocity.y < 0)
+			{
+				velocity.y = -2f;
+			}
 		}
+		else
+			controller.stepOffset = 0f;
 
 		float horizontal = Input.GetAxisRaw("Horizontal");
 		float vertical = Input.GetAxisRaw("Vertical");
 
 		Vector3 dir = new Vector3(horizontal, 0f, vertical).normalized;
 
-		if(dir.magnitude >= 0.1f)
+		if (dir.magnitude >= 0.1f)
 		{
 			float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 			float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
@@ -56,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
 			if (ph.canTurn)
 			{
 				transform.rotation = Quaternion.Euler(0f, angle, 0f);
-			}	
+			}
 
 			moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
@@ -73,9 +81,7 @@ public class PlayerMovement : MonoBehaviour
 
 		velocity.y += gravity * Time.deltaTime;
 
-		if (ph.hasGravity)
-		{
-			controller.Move(velocity * Time.deltaTime);
-		}
+		controller.Move(velocity * Time.deltaTime);
 	}
 }
+

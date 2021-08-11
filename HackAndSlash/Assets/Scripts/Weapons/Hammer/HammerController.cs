@@ -4,28 +4,38 @@ using UnityEngine;
 
 public class HammerController : MonoBehaviour
 {
-	PlayerTargeting pt;
+	PlayerSimpleGroundAttack psgt;
 	Animator anim;
 
 	private void Start()
 	{
-		pt = FindObjectOfType<PlayerTargeting>();
+		psgt = FindObjectOfType<PlayerSimpleGroundAttack>();
 		anim = GetComponent<Animator>();
 	}
 	private void Update()
 	{
-		if (pt.simpleAtk)
+		if (psgt.chasing)
 		{
 			anim.SetTrigger("simpleTargetAttack");
-			pt.simpleAtk = false;
+			psgt.chasing = false;
+		}
+		if (psgt.onDesination)
+		{
+			anim.SetTrigger("simpleTargetFollowAttack");
+			psgt.onDesination = false;
+		}
+		if (psgt.attack)
+		{
+			anim.SetTrigger("simpleAttack");
+			psgt.attack = false;
 		}
 	}
 
-	public void OnCollisionEnter(Collision collision)
-	{
-		if(collision.rigidbody != null)
-		{
-			collision.collider.GetComponent<Rigidbody>().AddForceAtPosition(20 * transform.forward, collision.GetContact(0).point, ForceMode.Impulse);
-		}
-	}
+	//public void OnCollisionEnter(Collision collision)
+	//{
+		//if(collision.rigidbody != null)
+		//{
+		//	collision.collider.GetComponent<Rigidbody>().AddForceAtPosition(20 * transform.forward, collision.GetContact(0).point, ForceMode.Impulse);
+		//}
+	//}
 }

@@ -19,7 +19,7 @@ public class PlayerDash : MonoBehaviour
 	}
 	private void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.LeftShift) && !isOnCooldown && ph.canDash)
+		if (Input.GetKeyDown(KeyCode.LeftShift) && !isOnCooldown && ph.canDash && moveScript.velocity.y <= 8f)
 		{
 			ph.canMove = false;
 			ph.hasGravity = false;
@@ -43,6 +43,7 @@ public class PlayerDash : MonoBehaviour
 			ph.canMove = true;
 			ph.hasGravity = true;
 			ph.canJump = true;
+			moveScript.velocity.y = -2f;
 		}
 
 		IEnumerator Cooldown()
